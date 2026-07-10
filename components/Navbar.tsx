@@ -4,15 +4,15 @@ import {
   AppBar,
   Toolbar,
   IconButton,
-  Typography,
   Box,
-  Avatar,
-  Badge,
   InputBase,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import SearchIcon from "@mui/icons-material/Search";
+
+// Component'leri dışarıdan çağırıyoruz (Yolları kendi projene göre kontrol et)
+import NotificationMenu from "./NotificationMenu";
+import ProfileMenu from "./ProfileMenu";
 
 interface NavbarProps {
   onMenuClick: () => void;
@@ -52,7 +52,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               borderRadius: 2,
               px: { xs: 1.5, sm: 2 },
               py: 0.8,
-              width: "100%", // Mobilde kalan tüm alanı doldurması için
+              width: "100%",
               maxWidth: { xs: "100%", md: "400px", lg: "600px" },
               border: "1px solid transparent",
               transition: "all 0.2s ease-in-out",
@@ -77,7 +77,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
           </Box>
         </Box>
 
-        {/* Sağ Kısım: Bildirim ve Profil (Asla küçülmez: flexShrink: 0) */}
+        {/* Sağ Kısım: Tamamen Modüler Hale Gelen Component'ler */}
         <Box
           sx={{
             display: "flex",
@@ -86,47 +86,11 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
             flexShrink: 0,
           }}
         >
-          <IconButton sx={{ color: "#4B5563" }}>
-            <Badge
-              badgeContent={3}
-              sx={{
-                "& .MuiBadge-badge": { bgcolor: "#EF4444", color: "white" },
-              }}
-            >
-              <NotificationsNoneIcon />
-            </Badge>
-          </IconButton>
+          {/* 1. Bildirim Menüsü */}
+          <NotificationMenu />
 
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1.5,
-              cursor: "pointer",
-            }}
-          >
-            <Avatar
-              sx={{
-                width: 32,
-                height: 32,
-                bgcolor: "#172C4A",
-                fontSize: "0.875rem",
-              }}
-            >
-              AD
-            </Avatar>
-            <Box sx={{ display: { xs: "none", sm: "block" } }}>
-              <Typography
-                variant="subtitle2"
-                sx={{ color: "#111827", fontWeight: 600, lineHeight: 1.2 }}
-              >
-                Admin User
-              </Typography>
-              <Typography variant="caption" sx={{ color: "#6B7280" }}>
-                Depo Yöneticisi
-              </Typography>
-            </Box>
-          </Box>
+          {/* 2. Profil Menüsü */}
+          <ProfileMenu />
         </Box>
       </Toolbar>
     </AppBar>

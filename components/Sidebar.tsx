@@ -17,7 +17,9 @@ import SyncAltOutlinedIcon from "@mui/icons-material/SyncAltOutlined";
 import FactCheckOutlinedIcon from "@mui/icons-material/FactCheckOutlined";
 import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";
 import WarehouseOutlinedIcon from "@mui/icons-material/WarehouseOutlined";
-
+import PeopleOutlineOutlinedIcon from "@mui/icons-material/PeopleOutlineOutlined";
+import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import LayersIcon from "@mui/icons-material/Layers"; 
 interface SidebarProps {
   mobileOpen: boolean;
   onClose: () => void;
@@ -42,10 +44,10 @@ export default function Sidebar({
       icon: <Inventory2OutlinedIcon />,
     },
     {
-    title: "Depolar",
-    path: "/warehouses",
-    icon: <WarehouseOutlinedIcon />, // Depolar için özel ikon eklendi
-  },
+      title: "Depolar",
+      path: "/warehouses",
+      icon: <WarehouseOutlinedIcon />, // Depolar için özel ikon eklendi
+    },
     {
       title: "Stok İşlemleri",
       path: "/operations",
@@ -56,6 +58,18 @@ export default function Sidebar({
       title: "Hareket Geçmişi",
       path: "/movements",
       icon: <HistoryOutlinedIcon />,
+    },
+    {
+      title: "Kullanıcı Yönetimi",
+      path: "/users",
+      icon: <PeopleOutlineOutlinedIcon />,
+      adminOnly: true,
+    },
+    {
+      title: "Sistem Ayarları",
+      path: "/settings",
+      icon: <SettingsOutlinedIcon />,
+      adminOnly: true,
     },
   ];
 
@@ -70,14 +84,13 @@ export default function Sidebar({
     >
       {/* Logo Alanı */}
       <Box sx={{ p: 3, display: "flex", alignItems: "center", gap: 1.5 }}>
-        <Box
-          sx={{ width: 32, height: 32, bgcolor: primaryColor, borderRadius: 1 }}
-        />
+          <LayersIcon sx={{ fontSize: 40, color: primaryColor }} />
+
         <Typography
           variant="h6"
           sx={{ fontWeight: 800, color: primaryColor, letterSpacing: "-0.5px" }}
         >
-          Entegre ERP
+          Entegre WMS
         </Typography>
       </Box>
 

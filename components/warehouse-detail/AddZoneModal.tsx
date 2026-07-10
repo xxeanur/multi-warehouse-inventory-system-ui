@@ -9,39 +9,33 @@ import {
   Button,
   TextField,
   Grid,
-  MenuItem,
   Typography,
   Box,
   IconButton,
   useMediaQuery,
   Divider,
+  InputAdornment,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import CloseIcon from "@mui/icons-material/Close";
 import ViewInArOutlinedIcon from "@mui/icons-material/ViewInArOutlined";
+import StraightenOutlinedIcon from "@mui/icons-material/StraightenOutlined";
 
-interface AddProductModalProps {
+interface AddZoneModalProps {
   open: boolean;
   onClose: () => void;
 }
 
-const categories = ["Elektronik", "Mobilya", "Aksesuar", "Kırtasiye", "Sarf Malzeme"];
-
-export default function AddProductModal({ open, onClose }: AddProductModalProps) {
+export default function AddZoneModal({ open, onClose }: AddZoneModalProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  // Form stateleri - Hacim ve ağırlık detaylandırıldı
   const [formData, setFormData] = useState({
-    name: "",
-    sku: "",
+    zoneName: "",
     category: "",
-    width: "",
-    height: "",
-    depth: "",
-    weight: "",
-    criticalLevel: "",
-    initialStock: "",
+    shelfCount: "",
+    maxVolumePerShelf: "",
+    maxWeightPerShelf: "",
   });
 
   const inputStyle = {
@@ -63,8 +57,7 @@ export default function AddProductModal({ open, onClose }: AddProductModalProps)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Kaydedilecek Ürün:", formData);
-    // Burada API'ye gönderme işlemi yapılacak
+    console.log("Kaydedilecek Yeni Blok:", formData);
     onClose();
   };
 
@@ -77,7 +70,7 @@ export default function AddProductModal({ open, onClose }: AddProductModalProps)
         paper: {
           sx: {
             width: "100%",
-            maxWidth: 600,
+            maxWidth: 550,
             borderRadius: { xs: 0, sm: 3 },
             p: { xs: 1, sm: 2 },
           },
@@ -89,26 +82,34 @@ export default function AddProductModal({ open, onClose }: AddProductModalProps)
           <Box sx={{ bgcolor: "#F3F4F6", p: 1, borderRadius: 2, color: "#172C4A", display: "flex" }}>
             <ViewInArOutlinedIcon />
           </Box>
-          <Typography variant="h6" sx={{ fontWeight: 700, color: "#111827", fontSize: { xs: "1.1rem", sm: "1.25rem" } }}>
-            Yeni Ürün Ekle
-          </Typography>
+          <Box>
+             <Typography variant="h6" sx={{ fontWeight: 700, color: "#111827", fontSize: { xs: "1.1rem", sm: "1.25rem" }, lineHeight: 1.2 }}>
+               Yeni Blok & Raf Tanımla
+             </Typography>
+             <Typography variant="caption" sx={{ color: "#6B7280", display: { xs: "none", sm: "block" } }}>
+               Deponun içine yeni bir lokasyon alanı oluşturun.
+             </Typography>
+          </Box>
         </Box>
         <IconButton onClick={onClose} sx={{ color: "#9CA3AF", bgcolor: "#F9FAFB" }}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
 
-      <DialogContent dividers sx={{ borderBottom: "none", borderColor: "#E5E7EB" }}>
-        <Box component="form" id="addProductForm" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+      <DialogContent dividers sx={{ borderBottom: "none", borderColor: "#E5E7EB", py: 2 }}>
+        <Box component="form" id="addZoneForm" onSubmit={handleSubmit} sx={{ mt: 1 }}>
           <Grid container spacing={2.5}>
-            <Grid size={{ xs: 12 }}>
+            
+            {/* TEMEL BİLGİLER */}
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 required
                 fullWidth
                 size="small"
-                label="Ürün Adı"
-                name="name"
-                value={formData.name}
+                label="Blok Kodu / Adı"
+                name="zoneName"
+                placeholder="Örn: C Bloğu"
+                value={formData.zoneName}
                 onChange={handleChange}
                 sx={inputStyle}
               />
@@ -118,119 +119,81 @@ export default function AddProductModal({ open, onClose }: AddProductModalProps)
                 required
                 fullWidth
                 size="small"
-                label="Stok Kodu (SKU)"
-                name="sku"
-                placeholder="Örn: SKU-1001"
-                value={formData.sku}
-                onChange={handleChange}
-                sx={inputStyle}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                select
-                required
-                fullWidth
-                size="small"
-                label="Kategori"
+                label="Kategori / Özellik"
                 name="category"
+                placeholder="Örn: Hacimli Ürünler"
                 value={formData.category}
                 onChange={handleChange}
                 sx={inputStyle}
-              >
-                {categories.map((option) => (
-                  <MenuItem key={option} value={option}>
-                    {option}
-                  </MenuItem>
-                ))}
-              </TextField>
+              />
             </Grid>
 
+            {/* FİZİKSEL KAPASİTE BÖLÜMÜ */}
             <Grid size={{ xs: 12 }}>
               <Divider sx={{ my: 1, borderColor: "#E5E7EB", borderStyle: "dashed" }} />
-              <Typography variant="body2" sx={{ fontWeight: 600, color: "#374151", mb: 0.5 }}>
-                Fiziksel Özellikler
-              </Typography>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                <StraightenOutlinedIcon sx={{ fontSize: 18, color: "#6B7280" }} />
+                <Typography variant="body2" sx={{ fontWeight: 600, color: "#374151" }}>
+                  Raf Başı Fiziksel Kapasite
+                </Typography>
+              </Box>
             </Grid>
 
-            {/* Fiziksel Boyutlar (En, Boy, Yükseklik) */}
-            <Grid size={{ xs: 4 }}>
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                label="En (cm)"
-                name="width"
-                value={formData.width}
-                onChange={handleChange}
-                sx={inputStyle}
-              />
-            </Grid>
-            <Grid size={{ xs: 4 }}>
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                label="Boy (cm)"
-                name="height"
-                value={formData.height}
-                onChange={handleChange}
-                sx={inputStyle}
-              />
-            </Grid>
-            <Grid size={{ xs: 4 }}>
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                label="Yükseklik (cm)"
-                name="depth"
-                value={formData.depth}
-                onChange={handleChange}
-                sx={inputStyle}
-              />
-            </Grid>
-
-            {/* Ağırlık ve Stok Bilgileri */}
             <Grid size={{ xs: 12, sm: 4 }}>
               <TextField
+                required
                 fullWidth
                 size="small"
                 type="number"
-                label="Ağırlık (kg)"
-                name="weight"
-                placeholder="Örn: 2.5"
-                value={formData.weight}
+                label="Raf Sayısı"
+                name="shelfCount"
+                placeholder="Örn: 4"
+                value={formData.shelfCount}
                 onChange={handleChange}
                 sx={inputStyle}
               />
             </Grid>
-            <Grid size={{ xs: 6, sm: 4 }}>
+            
+            <Grid size={{ xs: 12, sm: 4 }}>
               <TextField
                 required
                 fullWidth
                 size="small"
                 type="number"
-                label="Kritik Seviye"
-                name="criticalLevel"
-                value={formData.criticalLevel}
+                label="Max Hacim"
+                name="maxVolumePerShelf"
+                placeholder="Örn: 500"
+                value={formData.maxVolumePerShelf}
                 onChange={handleChange}
                 sx={inputStyle}
+                slotProps={{
+                  input: {
+                    endAdornment: <InputAdornment position="end">cm³</InputAdornment>,
+                  },
+                }}
               />
             </Grid>
-            <Grid size={{ xs: 6, sm: 4 }}>
+
+            <Grid size={{ xs: 12, sm: 4 }}>
               <TextField
                 required
                 fullWidth
                 size="small"
                 type="number"
-                label="Başlangıç Stoğu"
-                name="initialStock"
-                value={formData.initialStock}
+                label="Max Ağırlık"
+                name="maxWeightPerShelf"
+                placeholder="Örn: 250"
+                value={formData.maxWeightPerShelf}
                 onChange={handleChange}
                 sx={inputStyle}
+                slotProps={{
+                  input: {
+                    endAdornment: <InputAdornment position="end">kg</InputAdornment>,
+                  },
+                }}
               />
             </Grid>
+
           </Grid>
         </Box>
       </DialogContent>
@@ -239,18 +202,32 @@ export default function AddProductModal({ open, onClose }: AddProductModalProps)
         <Button
           onClick={onClose}
           variant="outlined"
-          sx={{ color: "#6B7280", borderColor: "#D1D5DB", "&:hover": { bgcolor: "#F9FAFB", borderColor: "#9CA3AF" }, textTransform: "none", fontWeight: 600, borderRadius: 2 }}
+          sx={{
+            color: "#6B7280",
+            borderColor: "#D1D5DB",
+            "&:hover": { bgcolor: "#F9FAFB", borderColor: "#9CA3AF" },
+            textTransform: "none",
+            fontWeight: 600,
+            borderRadius: 2,
+          }}
         >
           İptal
         </Button>
         <Button
           type="submit"
-          form="addProductForm"
+          form="addZoneForm"
           variant="contained"
           disableElevation
-          sx={{ bgcolor: "#172C4A", "&:hover": { bgcolor: "#0F1D33" }, textTransform: "none", fontWeight: 600, borderRadius: 2, px: 4 }}
+          sx={{
+            bgcolor: "#172C4A",
+            "&:hover": { bgcolor: "#0F1D33" },
+            textTransform: "none",
+            fontWeight: 600,
+            borderRadius: 2,
+            px: 4,
+          }}
         >
-          Ürünü Kaydet
+          Blok Oluştur
         </Button>
       </DialogActions>
     </Dialog>
