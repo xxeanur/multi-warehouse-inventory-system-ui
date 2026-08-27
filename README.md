@@ -59,24 +59,21 @@ Uygulama; ürün, depo, raf, stok, stok hareketleri, sayım, raflama ve kullanı
 
 ## 📂 Proje Yapısı
 
+```text
 src/
 ├── app/                    # Next.js App Router sayfaları
-│
 ├── components/             # Tekrar kullanılabilir UI bileşenleri
 │   └── products/
 │       └── drawer/         # Product Detail alt bileşenleri
-│
 ├── services/               # API servisleri
 │   ├── identity/           # Kullanıcı ve authentication işlemleri
 │   ├── inventory/          # Stok, sayım, raflama işlemleri
 │   ├── definitions/        # Ürün, depo, raf ve kategori işlemleri
 │   └── documents/          # Doküman işlemleri
-│
 ├── types/                  # TypeScript tipleri ve DTO'lar
-│
 ├── contexts/               # Global context yapıları
-│
 └── lib/                    # Yardımcı fonksiyonlar ve sabitler
+```
 
 
 ## ⚙️ Kurulum
@@ -136,13 +133,13 @@ Frontend tarafında servisler ve veri tipleri doğrudan tek bir klasörde toplan
 
 Örneğin:
 
-
+```text
 services/
 ├── identity/
 ├── inventory/
 ├── definitions/
 └── documents/
-
+```
 
 Bu yapı sayesinde her domain kendi servisleri ve tipleriyle birlikte yönetilebilir. Yeni bir modül eklendiğinde mevcut yapıyı karmaşıklaştırmadan ilgili domain altında geliştirme yapılabilir.
 
