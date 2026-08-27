@@ -1,72 +1,45 @@
-import {
-  Card,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
-  Chip,
-} from "@mui/material";
+// components/products/ProductsDesktopTable.tsx
+"use client";
 
-// TİP GÜNCELLENDİ: Ana sayfadakiyle birebir aynı yapıldı
-interface ProductData {
-  id: number;
-  sku: string;
-  name: string;
-  category: string;
-  warehouse: string;
-  width: number;
-  height: number;
-  depth: number;
-  weight: number;
-  criticalLevel: number;
-  totalStock: number;
-}
+import {
+  Card, Table, TableBody, TableCell,  TableContainer,  TableHead, TableRow, Typography,  Chip,
+} from "@mui/material";
+import { ProductData } from "@/app/(main)/products/page";
+
 
 interface ProductsDesktopTableProps {
   products: ProductData[];
   onRowClick: (product: ProductData) => void;
+  isSuperAdmin?: boolean;
+  onEdit?: () => void;
+  onDeleteSuccess?: () => void;
 }
 
 export default function ProductsDesktopTable({
   products,
   onRowClick,
+  isSuperAdmin = false,
+
 }: ProductsDesktopTableProps) {
+
+
   return (
     <Card
       elevation={0}
       sx={{ borderRadius: 3, border: "1px solid #E5E7EB", overflow: "hidden" }}
     >
       <TableContainer sx={{ maxWidth: "100%", overflowX: "auto" }}>
-        <Table sx={{ minWidth: 650 }}>
+        <Table sx={{ minWidth: 750 }}>
           <TableHead sx={{ bgcolor: "#FAFAFA" }}>
             <TableRow>
-              <TableCell sx={{ fontWeight: 600, color: "#4B5563" }}>
-                Stok Kodu (SKU)
-              </TableCell>
-              <TableCell sx={{ fontWeight: 600, color: "#4B5563" }}>
-                Ürün Adı
-              </TableCell>
-              <TableCell sx={{ fontWeight: 600, color: "#4B5563" }}>
-                Kategori
-              </TableCell>
-              <TableCell sx={{ fontWeight: 600, color: "#4B5563" }}>
-                Depo
-              </TableCell>
-              <TableCell
-                sx={{ fontWeight: 600, color: "#4B5563" }}
-                align="center"
-              >
-                Toplam Stok
-              </TableCell>
-              <TableCell
-                sx={{ fontWeight: 600, color: "#4B5563" }}
-                align="right"
-              >
-                Durum
-              </TableCell>
+              <TableCell sx={{ fontWeight: 600, color: "#4B5563" }}>Stok Kodu (SKU)</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: "#4B5563" }}>Ürün Adı</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: "#4B5563" }}>Marka</TableCell> 
+              <TableCell sx={{ fontWeight: 600, color: "#4B5563" }}>Kategori</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: "#4B5563" }}>Fiyat</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: "#4B5563" }}>Depo</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: "#4B5563" }} align="center">Toplam Stok</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: "#4B5563" }} align="right">Durum</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -82,22 +55,13 @@ export default function ProductsDesktopTable({
                     transition: "background-color 0.2s",
                   }}
                 >
-                  <TableCell sx={{ fontWeight: 500, color: "#374151" }}>
-                    {row.sku}
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 600, color: "#111827" }}>
-                    {row.name}
-                  </TableCell>
-                  <TableCell sx={{ color: "#6B7280" }}>
-                    {row.category}
-                  </TableCell>
-                  <TableCell sx={{ color: "#6B7280" }}>
-                    {row.warehouse}
-                  </TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{ fontWeight: 700, color: "#111827", fontSize: "1rem" }}
-                  >
+                  <TableCell sx={{ fontWeight: 500, color: "#374151" }}>{row.sku}</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: "#111827" }}>{row.name}</TableCell>
+                  <TableCell sx={{ color: "#6B7280" }}>{row.brand || "-"}</TableCell> 
+                  <TableCell sx={{ color: "#6B7280" }}>{row.category}</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: "#111827" }}>{row.unitPrice} ₺</TableCell>
+                  <TableCell sx={{ color: "#6B7280" }}>{row.warehouse}</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 700, color: "#111827", fontSize: "1rem" }}>
                     {row.totalStock}
                   </TableCell>
                   <TableCell align="right">
@@ -132,7 +96,7 @@ export default function ProductsDesktopTable({
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={isSuperAdmin ? 9 : 8} 
                   align="center"
                   sx={{ py: 6, color: "#6B7280" }}
                 >

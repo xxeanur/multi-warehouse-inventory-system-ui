@@ -1,19 +1,8 @@
+"use client";
+
 import { Stack, Card, Box, Typography, Chip, Divider } from "@mui/material";
 
-// TİP GÜNCELLENDİ: Ana sayfadakiyle birebir aynı yapıldı
-interface ProductData {
-  id: number;
-  sku: string;
-  name: string;
-  category: string;
-  warehouse: string;
-  width: number;
-  height: number;
-  depth: number;
-  weight: number;
-  criticalLevel: number;
-  totalStock: number;
-}
+import { ProductData } from "@/app/(main)/products/page";
 
 interface ProductsMobileListProps {
   products: ProductData[];

@@ -3,9 +3,10 @@ import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 
 interface UsersHeaderProps {
   onAddUserClick: () => void;
+  isStaff: boolean; 
 }
 
-export default function UsersHeader({ onAddUserClick }: UsersHeaderProps) {
+export default function UsersHeader({ onAddUserClick, isStaff }: UsersHeaderProps) {
   return (
     <Box
       sx={{
@@ -28,22 +29,25 @@ export default function UsersHeader({ onAddUserClick }: UsersHeaderProps) {
           Sistemdeki personellerin yetkilerini ve hesap durumlarını yönetin.
         </Typography>
       </Box>
-      <Button
-        variant="contained"
-        startIcon={<AddOutlinedIcon />}
-        onClick={onAddUserClick}
-        sx={{
-          bgcolor: "#172C4A",
-          "&:hover": { bgcolor: "#0F1D33" },
-          py: 1.2,
-          px: 3,
-          fontWeight: 600,
-          borderRadius: 2,
-          textTransform: "none",
-        }}
-      >
-        Yeni Kullanıcı Ekle
-      </Button>
+
+      {!isStaff && (
+        <Button
+          variant="contained"
+          startIcon={<AddOutlinedIcon />}
+          onClick={onAddUserClick}
+          sx={{
+            bgcolor: "#172C4A",
+            "&:hover": { bgcolor: "#0F1D33" },
+            py: 1.2,
+            px: 3,
+            fontWeight: 600,
+            borderRadius: 2,
+            textTransform: "none",
+          }}
+        >
+          Yeni Kullanıcı Ekle
+        </Button>
+      )}
     </Box>
   );
 }

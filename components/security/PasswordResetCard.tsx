@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import {
   Box,
   Card,
@@ -10,7 +13,19 @@ import {
 import { SxProps, Theme } from "@mui/material/styles";
 import VpnKeyOutlinedIcon from "@mui/icons-material/VpnKeyOutlined";
 
+import { userService } from "@/services/identity/userService";
+import { authService } from "@/services/identity/authService";
+import { notifySuccess, notifyError } from "@/lib/notificationService";
+import { useConfirm } from "@/contexts/ConfirmContext";
+
 export default function PasswordResetCard() {
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const { confirm } = useConfirm();
+
   const inputStyle: SxProps<Theme> = {
     "& .MuiOutlinedInput-root": {
       borderRadius: 2,
@@ -21,6 +36,7 @@ export default function PasswordResetCard() {
     },
     "& .MuiInputBase-input": { fontSize: "0.9rem" },
     "& .MuiInputLabel-root": { fontSize: "0.9rem" },
+    "& label.Mui-focused": { color: "#172C4A" },
   };
 
   const sectionCardStyle = {
@@ -32,6 +48,53 @@ export default function PasswordResetCard() {
     display: "flex",
     flexDirection: "column",
     height: "100%",
+  };
+
+  const handlePasswordChange = async () => {
+    if (!oldPassword || !newPassword || !newPasswordConfirm) {
+      notifyError("Lütfen tüm şifre alanlarını doldurun.");
+      return;
+    }
+
+    if (newPassword !== newPasswordConfirm) {
+      notifyError("Yeni girdiğiniz şifreler birbiriyle eşleşmiyor.");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      notifyError("Yeni şifreniz en az 6 karakter olmalıdır.");
+      return;
+    }
+
+    const isConfirmed = await confirm({
+      title: "Şifre Güncelleme",
+      description:
+        "Şifreniz değiştirilecek ve güvenliğiniz için sistemden çıkış yapılacaktır. Onaylıyor musunuz?",
+      confirmText: "Evet, Değiştir",
+      cancelText: "Vazgeç",
+    });
+
+    if (!isConfirmed) return;
+
+    setIsSaving(true);
+
+    userService
+      .changePasswordAsync({
+        oldPassword: oldPassword,
+        newPassword: newPassword,
+      })
+      .then(() => {
+        notifySuccess(
+          "Şifreniz değiştirildi. Güvenliğiniz için çıkış yapılıyor...",
+        );
+
+        setTimeout(async () => {
+          await authService.logout();
+        }, 2000);
+      })
+      .catch(() => {
+        setIsSaving(false);
+      });
   };
 
   return (
@@ -54,7 +117,7 @@ export default function PasswordResetCard() {
           variant="caption"
           sx={{ color: "#6B7280", display: "block", mb: 3 }}
         >
-          Güvenliğiniz için şifrenizi en az 8 karakter uzunluğunda, harf ve
+          Güvenliğiniz için şifrenizi en az 6 karakter uzunluğunda, harf ve
           rakam kombinasyonu ile oluşturun.
         </Typography>
 
@@ -64,6 +127,8 @@ export default function PasswordResetCard() {
               fullWidth
               type="password"
               label="Mevcut Şifre"
+              value={oldPassword}
+              onChange={(e) => setOldPassword(e.target.value)}
               sx={inputStyle}
             />
           </Grid>
@@ -72,6 +137,8 @@ export default function PasswordResetCard() {
               fullWidth
               type="password"
               label="Yeni Şifre"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
               sx={inputStyle}
             />
           </Grid>
@@ -80,6 +147,8 @@ export default function PasswordResetCard() {
               fullWidth
               type="password"
               label="Yeni Şifre (Tekrar)"
+              value={newPasswordConfirm}
+              onChange={(e) => setNewPasswordConfirm(e.target.value)}
               sx={inputStyle}
             />
           </Grid>
@@ -91,6 +160,8 @@ export default function PasswordResetCard() {
       <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
         <Button
           variant="contained"
+          onClick={handlePasswordChange}
+          disabled={isSaving}
           sx={{
             bgcolor: "#172C4A",
             "&:hover": { bgcolor: "#0F1D33" },
@@ -101,7 +172,7 @@ export default function PasswordResetCard() {
             textTransform: "none",
           }}
         >
-          Şifreyi Güncelle
+          {isSaving ? "İşleniyor..." : "Şifreyi Güncelle"}
         </Button>
       </Box>
     </Card>

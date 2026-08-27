@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Drawer,
@@ -10,20 +11,39 @@ import {
   ListItemText,
   Box,
   Typography,
+  Collapse,
 } from "@mui/material";
+
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
-import SyncAltOutlinedIcon from "@mui/icons-material/SyncAltOutlined";
 import FactCheckOutlinedIcon from "@mui/icons-material/FactCheckOutlined";
 import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";
 import WarehouseOutlinedIcon from "@mui/icons-material/WarehouseOutlined";
 import PeopleOutlineOutlinedIcon from "@mui/icons-material/PeopleOutlineOutlined";
-import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
-import LayersIcon from "@mui/icons-material/Layers"; 
+
+import LayersIcon from "@mui/icons-material/Layers";
+import ExpandLess from "@mui/icons-material/ExpandLess";
+import ExpandMore from "@mui/icons-material/ExpandMore";
+import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
+import LocalShippingOutlinedIcon from "@mui/icons-material/LocalShippingOutlined";
+import TuneOutlinedIcon from "@mui/icons-material/TuneOutlined";
+import MoveToInboxOutlinedIcon from "@mui/icons-material/MoveToInboxOutlined";
+import InputIcon from "@mui/icons-material/Input";
+import OutputIcon from "@mui/icons-material/Output";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
+import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
+
 interface SidebarProps {
   mobileOpen: boolean;
   onClose: () => void;
   drawerWidth: number;
+}
+
+interface MenuItemDef {
+  title: string;
+  path: string;
+  icon: React.ReactNode;
+  staffHidden?: boolean;
 }
 
 export default function Sidebar({
@@ -35,43 +55,147 @@ export default function Sidebar({
   const router = useRouter();
   const primaryColor = "#172C4A";
 
-  // Rotalar oluşturduğumuz sayfalara (/products, /operations, /count, /movements) bağlandı
-  const menuItems = [
-    { title: "Dashboard", path: "/dashboard", icon: <DashboardOutlinedIcon /> },
+  const [openSettings, setOpenSettings] = useState(false);
+  const [openDocuments, setOpenDocuments] = useState(false);
+
+ 
+  const [isStaff, setIsStaff] = useState(false);
+  const [isMounted, setIsMounted] = useState(false); 
+
+  useEffect(() => {
+    const userContextStr = localStorage.getItem("userContext");
+    if (userContextStr) {
+      try {
+        const user = JSON.parse(userContextStr);
+        if (user.role === "Staff" || user.role === 2) {
+          setIsStaff(true);
+        }
+      } catch (error) {
+        console.error("User context parse edilemedi", error);
+      }
+    }
+    setIsMounted(true); 
+  }, []);
+
+  const topMenuItems: MenuItemDef[] = [
     {
-      title: "Ürünler",
-      path: "/products", //products olarak güncellendi
-      icon: <Inventory2OutlinedIcon />,
+      title: "Dashboard",
+      path: "/dashboard",
+      icon: <DashboardOutlinedIcon />,
+      staffHidden: true,
     },
+    { title: "Ürünler", path: "/products", icon: <Inventory2OutlinedIcon /> },
     {
       title: "Depolar",
       path: "/warehouses",
-      icon: <WarehouseOutlinedIcon />, // Depolar için özel ikon eklendi
+      icon: <WarehouseOutlinedIcon />,
+      staffHidden:false ,
+    },
+  ];
+
+  const documentItems: MenuItemDef[] = [
+    {
+      title: "Mal Kabul (Inbound)",
+      path: "/documents/inbound",
+      icon: <InputIcon />,
     },
     {
-      title: "Stok İşlemleri",
-      path: "/operations",
-      icon: <SyncAltOutlinedIcon />,
+      title: "Sevkiyat (Outbound)",
+      path: "/documents/outbound",
+      icon: <OutputIcon />,
+    },
+    {
+      title: "Transfer İşlemleri",
+      path: "/documents/transfer",
+      icon: <SwapHorizIcon />,
+    },
+  ];
+
+  const operationItems: MenuItemDef[] = [
+    {
+      title: "Rafa Yerleştirme",
+      path: "/putaway",
+      icon: <MoveToInboxOutlinedIcon />,
     },
     { title: "Depo Sayım", path: "/count", icon: <FactCheckOutlinedIcon /> },
     {
-      title: "Hareket Geçmişi",
+      title: "Stok Defteri (Ledger)",
       path: "/movements",
       icon: <HistoryOutlinedIcon />,
+      staffHidden: true,
     },
+  ];
+
+  const settingsItems: MenuItemDef[] = [
+    {
+      title: "Kategoriler",
+      path: "/definitions/categories",
+      icon: <CategoryOutlinedIcon />,
+    },
+    {
+      title: "Tedarikçiler",
+      path: "/definitions/suppliers",
+      icon: <LocalShippingOutlinedIcon />,
+    },
+  ];
+
+  const bottomItems: MenuItemDef[] = [
     {
       title: "Kullanıcı Yönetimi",
       path: "/users",
       icon: <PeopleOutlineOutlinedIcon />,
-      adminOnly: true,
-    },
-    {
-      title: "Sistem Ayarları",
-      path: "/settings",
-      icon: <SettingsOutlinedIcon />,
-      adminOnly: true,
-    },
+      staffHidden: true,
+    }
   ];
+
+  const renderMenuItem = (
+    item: MenuItemDef,
+    isNested: boolean = false,
+    extraMarginTop: boolean = false,
+  ) => {
+    if (isStaff && item.staffHidden) return null;
+
+    const isActive = pathname.startsWith(item.path);
+
+    return (
+      <ListItem
+        key={item.title}
+        disablePadding
+        sx={{ mb: 0.5, mt: extraMarginTop ? 1 : 0 }}
+      >
+        <ListItemButton
+          onClick={() => {
+            router.push(item.path);
+            if (mobileOpen) onClose();
+          }}
+          sx={{
+            borderRadius: 2,
+            pl: isNested ? 4 : undefined,
+            bgcolor: isActive ? "#EEF2FF" : "transparent",
+            color: isActive ? primaryColor : "#4B5563",
+            "&:hover": { bgcolor: isActive ? "#EEF2FF" : "#F3F4F6" },
+          }}
+        >
+          <ListItemIcon
+            sx={{ color: isActive ? primaryColor : "#9CA3AF", minWidth: 40 }}
+          >
+            {item.icon}
+          </ListItemIcon>
+          <ListItemText
+            primary={item.title}
+            slotProps={{
+              primary: {
+                sx: {
+                  fontWeight: isActive ? 700 : 500,
+                  fontSize: isNested ? "0.85rem" : "0.875rem",
+                },
+              },
+            }}
+          />
+        </ListItemButton>
+      </ListItem>
+    );
+  };
 
   const drawerContent = (
     <Box
@@ -82,10 +206,8 @@ export default function Sidebar({
         bgcolor: "#FFFFFF",
       }}
     >
-      {/* Logo Alanı */}
       <Box sx={{ p: 3, display: "flex", alignItems: "center", gap: 1.5 }}>
-          <LayersIcon sx={{ fontSize: 40, color: primaryColor }} />
-
+        <LayersIcon sx={{ fontSize: 40, color: primaryColor }} />
         <Typography
           variant="h6"
           sx={{ fontWeight: 800, color: primaryColor, letterSpacing: "-0.5px" }}
@@ -94,47 +216,95 @@ export default function Sidebar({
         </Typography>
       </Box>
 
-      {/* Menü Listesi */}
-      <List sx={{ px: 2, flex: 1 }}>
-        {menuItems.map((item) => {
-          const isActive = pathname.startsWith(item.path);
-          return (
-            <ListItem key={item.title} disablePadding sx={{ mb: 0.5 }}>
+      <List
+        sx={{
+          px: 2,
+          flex: 1,
+          overflowY: "auto",
+          opacity: isMounted ? 1 : 0,
+          transition: "opacity 0.2s",
+        }}
+      >
+        {topMenuItems.map((item) => renderMenuItem(item))}
+
+        <ListItem disablePadding sx={{ mb: 0.5, mt: 1 }}>
+          <ListItemButton
+            onClick={() => setOpenDocuments(!openDocuments)}
+            sx={{ borderRadius: 2, "&:hover": { bgcolor: "#F3F4F6" } }}
+          >
+            <ListItemIcon sx={{ minWidth: 40, color: "#9CA3AF" }}>
+              <AssignmentOutlinedIcon />
+            </ListItemIcon>
+            <ListItemText
+              primary="Belge Yönetimi"
+              slotProps={{
+                primary: {
+                  sx: {
+                    fontWeight: 600,
+                    fontSize: "0.875rem",
+                    color: "#374151",
+                  },
+                },
+              }}
+            />
+            {openDocuments ? (
+              <ExpandLess sx={{ color: "#9CA3AF" }} />
+            ) : (
+              <ExpandMore sx={{ color: "#9CA3AF" }} />
+            )}
+          </ListItemButton>
+        </ListItem>
+        <Collapse in={openDocuments} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding>
+            {documentItems.map((item) => renderMenuItem(item, true))}
+          </List>
+        </Collapse>
+
+        {operationItems.map((item, index) =>
+          renderMenuItem(item, false, index === 0),
+        )}
+
+        <Box sx={{ mt: 2 }} />
+
+        {!isStaff && (
+          <>
+            <ListItem disablePadding sx={{ mb: 0.5 }}>
               <ListItemButton
-                onClick={() => {
-                  router.push(item.path);
-                  onClose(); // Mobilde menüyü kapat
-                }}
-                sx={{
-                  borderRadius: 2,
-                  bgcolor: isActive ? "#EEF2FF" : "transparent",
-                  color: isActive ? primaryColor : "#4B5563",
-                  "&:hover": { bgcolor: isActive ? "#EEF2FF" : "#F3F4F6" },
-                }}
+                onClick={() => setOpenSettings(!openSettings)}
+                sx={{ borderRadius: 2, "&:hover": { bgcolor: "#F3F4F6" } }}
               >
-                <ListItemIcon
-                  sx={{
-                    color: isActive ? primaryColor : "#9CA3AF",
-                    minWidth: 40,
-                  }}
-                >
-                  {item.icon}
+                <ListItemIcon sx={{ minWidth: 40, color: "#9CA3AF" }}>
+                  <TuneOutlinedIcon />
                 </ListItemIcon>
                 <ListItemText
-                  primary={item.title}
+                  primary="Tanımlamalar"
                   slotProps={{
                     primary: {
                       sx: {
-                        fontWeight: isActive ? 700 : 500, // Aktifken biraz daha belirgin yapıldı
+                        fontWeight: 500,
                         fontSize: "0.875rem",
+                        color: "#4B5563",
                       },
                     },
                   }}
                 />
+                {openSettings ? (
+                  <ExpandLess sx={{ color: "#9CA3AF" }} />
+                ) : (
+                  <ExpandMore sx={{ color: "#9CA3AF" }} />
+                )}
               </ListItemButton>
             </ListItem>
-          );
-        })}
+            <Collapse in={openSettings} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                {settingsItems.map((item) => renderMenuItem(item, true))}
+              </List>
+            </Collapse>
+            <Box sx={{ mt: 2 }} />
+          </>
+        )}
+
+        {bottomItems.map((item) => renderMenuItem(item))}
       </List>
     </Box>
   );
@@ -144,7 +314,6 @@ export default function Sidebar({
       component="nav"
       sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
     >
-      {/* Mobil Sidebar (Geçici) */}
       <Drawer
         variant="temporary"
         open={mobileOpen}
@@ -156,12 +325,12 @@ export default function Sidebar({
             boxSizing: "border-box",
             width: drawerWidth,
             borderRight: "none",
+            zIndex: 1300,
           },
         }}
       >
         {drawerContent}
       </Drawer>
-      {/* Masaüstü Sidebar (Sabit) */}
       <Drawer
         variant="permanent"
         sx={{

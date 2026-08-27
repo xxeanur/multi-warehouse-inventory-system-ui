@@ -10,7 +10,6 @@ import Link from "next/link";
 export default function SupportPage() {
   const primaryColor = "#172C4A";
 
-  // Butonları daha büyük ve Login sayfasındaki "Giriş Yap" butonu ile aynı ağırlıkta tasarladım
   const actionButtonStyle = {
     py: 2, 
     borderRadius: 2, 
@@ -37,7 +36,6 @@ export default function SupportPage() {
             Operasyonel sorunların için destek ekibimize ulaşın.
           </Typography>
 
-          {/* Büyük ve Şık Aksiyon Butonları */}
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mb: 4 }}>
             <Button 
               variant="contained" 

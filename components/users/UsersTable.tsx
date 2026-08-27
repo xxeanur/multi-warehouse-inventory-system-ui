@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Box,
   Card,
@@ -9,32 +11,44 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  IconButton,
   Chip,
 } from "@mui/material";
-import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  status: string;
-  lastLogin: string;
-}
+import { UserDto, UserRole } from "@/types/identity/user";
+import { WarehouseDto } from "@/types/definitions/warehouse";
 
 interface UsersTableProps {
-  users: User[];
-  onMenuOpen: (event: React.MouseEvent<HTMLElement>, user: User) => void;
+  users: UserDto[];
+  warehouses: WarehouseDto[];
+  currentUserId: string;
+  onRowClick: (user: UserDto) => void;
 }
 
-export default function UsersTable({ users, onMenuOpen }: UsersTableProps) {
-  const getRoleBadge = (role: string) => {
+const toTitleCaseTR = (str: string) => {
+  if (!str) return "";
+  return str
+    .split(" ")
+    .map((word) => {
+      if (!word) return "";
+      return (
+        word.charAt(0).toLocaleUpperCase("tr-TR") +
+        word.slice(1).toLocaleLowerCase("tr-TR")
+      );
+    })
+    .join(" ");
+};
+
+export default function UsersTable({
+  users,
+  warehouses,
+  currentUserId,
+  onRowClick,
+}: UsersTableProps) {
+  const getRoleBadge = (role: UserRole) => {
     switch (role) {
-      case "SUPER_ADMIN":
+      case UserRole.SuperAdmin:
         return (
           <Chip
             icon={<ShieldOutlinedIcon fontSize="small" />}
@@ -49,7 +63,7 @@ export default function UsersTable({ users, onMenuOpen }: UsersTableProps) {
             }}
           />
         );
-      case "WAREHOUSE_MANAGER":
+      case UserRole.WarehouseManager:
         return (
           <Chip
             icon={<Inventory2OutlinedIcon fontSize="small" />}
@@ -64,7 +78,7 @@ export default function UsersTable({ users, onMenuOpen }: UsersTableProps) {
             }}
           />
         );
-      case "FIELD_STAFF":
+      case UserRole.Staff:
         return (
           <Chip
             icon={<PersonOutlineOutlinedIcon fontSize="small" />}
@@ -84,10 +98,9 @@ export default function UsersTable({ users, onMenuOpen }: UsersTableProps) {
     }
   };
 
-  const getStatusStyle = (status: string) => {
-    if (status === "ACTIVE") return { color: "#10B981", text: "Aktif" };
-    if (status === "OFFLINE") return { color: "#9CA3AF", text: "Çevrimdışı" };
-    return { color: "#EF4444", text: "Askıya Alındı" };
+  const getStatusStyle = (isActive: boolean) => {
+    if (isActive) return { color: "#10B981", text: "Aktif" };
+    return { color: "#EF4444", text: "Pasif" };
   };
 
   return (
@@ -101,45 +114,96 @@ export default function UsersTable({ users, onMenuOpen }: UsersTableProps) {
         boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.01)",
       }}
     >
-      <TableContainer>
-        <Table sx={{ minWidth: 700 }}>
+      <TableContainer sx={{ overflowX: "auto" }}>
+        <Table sx={{ minWidth: 800 }}>
           <TableHead sx={{ bgcolor: "#F9FAFB" }}>
             <TableRow>
-              <TableCell sx={{ fontWeight: 700, color: "#374151", py: 2 }}>
+              <TableCell
+                sx={{
+                  fontWeight: 700,
+                  color: "#374151",
+                  py: 2,
+                  whiteSpace: "nowrap",
+                }}
+              >
                 Kullanıcı
               </TableCell>
-              <TableCell sx={{ fontWeight: 700, color: "#374151", py: 2 }}>
+              <TableCell
+                sx={{
+                  fontWeight: 700,
+                  color: "#374151",
+                  py: 2,
+                  whiteSpace: "nowrap",
+                }}
+              >
                 Sistem Rolü
               </TableCell>
-              <TableCell sx={{ fontWeight: 700, color: "#374151", py: 2 }}>
-                Durum
-              </TableCell>
-              <TableCell sx={{ fontWeight: 700, color: "#374151", py: 2 }}>
-                Son Giriş
+              <TableCell
+                sx={{
+                  fontWeight: 700,
+                  color: "#374151",
+                  py: 2,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Bağlı Olduğu Depo
               </TableCell>
               <TableCell
-                align="right"
-                sx={{ fontWeight: 700, color: "#374151", py: 2 }}
+                sx={{
+                  fontWeight: 700,
+                  color: "#374151",
+                  py: 2,
+                  whiteSpace: "nowrap",
+                }}
               >
-                İşlemler
+                Durum
+              </TableCell>
+              <TableCell
+                sx={{
+                  fontWeight: 700,
+                  color: "#374151",
+                  py: 2,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Kayıt Tarihi
               </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {users.map((user) => {
-              const statusData = getStatusStyle(user.status);
-              const isMe = user.role === "SUPER_ADMIN";
+              const statusData = getStatusStyle(user.isActive);
+
+              const isMe = user.id === currentUserId;
+
+              const formattedFirstName = toTitleCaseTR(user.firstName);
+              const formattedLastName = toTitleCaseTR(user.lastName);
+              const fullName = `${formattedFirstName} ${formattedLastName}`;
+
+              let warehouseText = "Atanmadı";
+              if (user.role === UserRole.SuperAdmin) {
+                warehouseText = "Genel Merkez";
+              } else if (user.warehouseId) {
+                const foundWarehouse = warehouses.find(
+                  (w) => w.id === user.warehouseId,
+                );
+                warehouseText = foundWarehouse
+                  ? foundWarehouse.name
+                  : user.warehouseName || "Bilinmeyen Depo";
+              }
 
               return (
                 <TableRow
                   key={user.id}
+                  onClick={() => onRowClick(user)}
                   sx={{
                     "&:last-child td, &:last-child th": { border: 0 },
-                    "&:hover": { bgcolor: "#FAFAFA" },
-                    transition: "0.2s",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    "&:hover": { bgcolor: "#F3F4F6" },
                   }}
                 >
-                  <TableCell>
+                  <TableCell sx={{ py: 2, whiteSpace: "nowrap" }}>
                     <Box
                       sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
                     >
@@ -153,10 +217,8 @@ export default function UsersTable({ users, onMenuOpen }: UsersTableProps) {
                           fontSize: "1rem",
                         }}
                       >
-                        {user.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
+                        {formattedFirstName[0]}
+                        {formattedLastName[0]}
                       </Avatar>
                       <Box>
                         <Typography
@@ -169,7 +231,7 @@ export default function UsersTable({ users, onMenuOpen }: UsersTableProps) {
                             gap: 1,
                           }}
                         >
-                          {user.name}{" "}
+                          {fullName}{" "}
                           {isMe && (
                             <Chip
                               label="Sen"
@@ -190,10 +252,24 @@ export default function UsersTable({ users, onMenuOpen }: UsersTableProps) {
                       </Box>
                     </Box>
                   </TableCell>
-
-                  <TableCell>{getRoleBadge(user.role)}</TableCell>
-
-                  <TableCell>
+                  <TableCell sx={{ whiteSpace: "nowrap" }}>
+                    {getRoleBadge(user.role)}
+                  </TableCell>
+                  <TableCell sx={{ whiteSpace: "nowrap" }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontWeight: 600,
+                        color:
+                          user.warehouseId || user.role === UserRole.SuperAdmin
+                            ? "#111827"
+                            : "#9CA3AF",
+                      }}
+                    >
+                      {warehouseText}
+                    </Typography>
+                  </TableCell>
+                  <TableCell sx={{ whiteSpace: "nowrap" }}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <Box
                         sx={{
@@ -211,20 +287,10 @@ export default function UsersTable({ users, onMenuOpen }: UsersTableProps) {
                       </Typography>
                     </Box>
                   </TableCell>
-
-                  <TableCell>
+                  <TableCell sx={{ whiteSpace: "nowrap" }}>
                     <Typography variant="body2" sx={{ color: "#6B7280" }}>
-                      {user.lastLogin}
+                      {new Date(user.createdDate).toLocaleDateString("tr-TR")}
                     </Typography>
-                  </TableCell>
-
-                  <TableCell align="right">
-                    <IconButton
-                      onClick={(e) => onMenuOpen(e, user)}
-                      sx={{ color: "#4B5563" }}
-                    >
-                      <MoreVertOutlinedIcon />
-                    </IconButton>
                   </TableCell>
                 </TableRow>
               );

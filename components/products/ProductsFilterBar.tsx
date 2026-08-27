@@ -1,5 +1,10 @@
-import { Card, Grid, TextField, InputAdornment, MenuItem } from "@mui/material";
+// components/products/ProductsFilterBar.tsx
+import { Card, TextField, InputAdornment, MenuItem } from "@mui/material";
+import { Grid } from "@mui/material"; // DÜZELTİLDİ
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
+import { CategoryDto } from "@/types/definitions/category";
+import { WarehouseDto } from "@/types/definitions/warehouse";
+import { SupplierDto } from "@/types/definitions/supplier";
 
 interface ProductsFilterBarProps {
   searchTerm: string;
@@ -10,6 +15,11 @@ interface ProductsFilterBarProps {
   setSelectedWarehouse: (val: string) => void;
   selectedStatus: string;
   setSelectedStatus: (val: string) => void;
+  selectedSupplier: string;
+  setSelectedSupplier: (val: string) => void;
+  categories: CategoryDto[];
+  warehouses: WarehouseDto[];
+  suppliers: SupplierDto[];
 }
 
 export default function ProductsFilterBar({
@@ -21,16 +31,26 @@ export default function ProductsFilterBar({
   setSelectedWarehouse,
   selectedStatus,
   setSelectedStatus,
+  selectedSupplier,
+  setSelectedSupplier,
+  categories,
+  warehouses,
+  suppliers,
 }: ProductsFilterBarProps) {
+  const primaryColor = "#172C4A";
   const inputStyle = {
     "& .MuiOutlinedInput-root": {
       borderRadius: 2,
       bgcolor: "#F9FAFB",
       "& fieldset": { borderColor: "#E5E7EB" },
-      "&:hover fieldset": { borderColor: "#172C4A" },
-      "&.Mui-focused fieldset": { borderColor: "#172C4A", borderWidth: "1px" },
+      "&:hover fieldset": { borderColor: primaryColor },
+      "&.Mui-focused fieldset": {
+        borderColor: primaryColor,
+        borderWidth: "1px",
+      },
     },
     "& .MuiInputBase-input": { fontSize: { xs: "0.85rem", md: "0.95rem" } },
+    "& .MuiInputLabel-root.Mui-focused": { color: primaryColor },
   };
 
   return (
@@ -44,7 +64,7 @@ export default function ProductsFilterBar({
       }}
     >
       <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 3 }}>
+        <Grid size={{ xs: 12, md: 2.4 }}>
           <TextField
             fullWidth
             size="small"
@@ -65,7 +85,7 @@ export default function ProductsFilterBar({
             }}
           />
         </Grid>
-        <Grid size={{ xs: 6, md: 3 }}>
+        <Grid size={{ xs: 6, md: 2.4 }}>
           <TextField
             select
             fullWidth
@@ -76,12 +96,14 @@ export default function ProductsFilterBar({
             sx={inputStyle}
           >
             <MenuItem value="ALL">Tüm Kategoriler</MenuItem>
-            <MenuItem value="Elektronik">Elektronik</MenuItem>
-            <MenuItem value="Mobilya">Mobilya</MenuItem>
-            <MenuItem value="Aksesuar">Aksesuar</MenuItem>
+            {categories.map((cat) => (
+              <MenuItem key={cat.id} value={cat.name}>
+                {cat.name}
+              </MenuItem>
+            ))}
           </TextField>
         </Grid>
-        <Grid size={{ xs: 6, md: 3 }}>
+        <Grid size={{ xs: 6, md: 2.4 }}>
           <TextField
             select
             fullWidth
@@ -92,11 +114,32 @@ export default function ProductsFilterBar({
             sx={inputStyle}
           >
             <MenuItem value="ALL">Tüm Depolar</MenuItem>
-            <MenuItem value="Merkez Depo">Merkez Depo</MenuItem>
-            <MenuItem value="Konya Şube">Konya Şube</MenuItem>
+            {warehouses.map((wh) => (
+              <MenuItem key={wh.id} value={wh.name}>
+                {wh.name}
+              </MenuItem>
+            ))}
           </TextField>
         </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
+        <Grid size={{ xs: 6, md: 2.4 }}>
+          <TextField
+            select
+            fullWidth
+            size="small"
+            label="Tedarikçi"
+            value={selectedSupplier}
+            onChange={(e) => setSelectedSupplier(e.target.value)}
+            sx={inputStyle}
+          >
+            <MenuItem value="ALL">Tüm Tedarikçiler</MenuItem>
+            {suppliers.map((sup) => (
+              <MenuItem key={sup.id} value={sup.id}>
+                {sup.companyName}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Grid>
+        <Grid size={{ xs: 6, md: 2.4 }}>
           <TextField
             select
             fullWidth

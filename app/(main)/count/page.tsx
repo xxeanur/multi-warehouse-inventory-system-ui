@@ -1,52 +1,124 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Box, Grid } from "@mui/material";
-import LayoutWrapper from "../../../components/LayoutWrapper";
+import LayoutWrapper from "@/components/LayoutWrapper";
 
-// Az önce oluşturduğumuz alt bileşenleri içeri alıyoruz
-import InventoryCountHeader from "../../../components/count/InventoryCountHeader";
-import InventoryCountSummary from "../../../components/count/InventoryCountSummary";
-import InventoryCountForm from "../../../components/count/InventoryCountForm";
-import InventoryCountTable from "../../../components/count/InventoryCountTable";
+import InventoryCountHeader from "@/components/count/InventoryCountHeader";
+import InventoryCountForm from "@/components/count/InventoryCountForm";
+import InventoryCountTable from "@/components/count/InventoryCountTable";
 
-// Mock Veriler
-const products = [
-  "MacBook Pro M3",
-  "Dell UltraSharp Monitör",
-  "Logitech MX Master 3",
-];
-const shelves = ["A1-01", "A1-02", "B2-05", "C3-10"];
-const activeCounts = [
-  {
-    id: 1,
-    sku: "SKU-1001",
-    name: "MacBook Pro M3",
-    shelf: "A1-01",
-    systemQty: 45,
-    countedQty: 45,
-    status: "Eşleşti",
-  },
-  {
-    id: 2,
-    sku: "SKU-1002",
-    name: "Dell UltraSharp Monitör",
-    shelf: "A1-02",
-    systemQty: 15,
-    countedQty: 14,
-    status: "Eksik",
-  },
-  {
-    id: 3,
-    sku: "SKU-1088",
-    name: "Logitech MX Master 3",
-    shelf: "B2-05",
-    systemQty: 8,
-    countedQty: 10,
-    status: "Fazla",
-  },
-];
+import { WarehouseDto } from "@/types/definitions/warehouse";
+import { WarehouseZoneDto } from "@/types/definitions/warehouseZone";
+import { ShelfDto } from "@/types/definitions/shelf";
+
+import { warehouseService } from "@/services/definitions/warehouseService";
+import { warehouseZoneService } from "@/services/common/warehouseZoneService";
+import { shelfService } from "@/services/definitions/shelfService";
+import { inventoryCountService } from "@/services/inventory/inventoryCountService";
+import { notifySuccess } from "@/lib/notificationService";
+import { useConfirm } from "@/contexts/ConfirmContext"; // YENİ: Confirm eklendi
+
+export interface ActiveCountItem {
+  id: string;
+  sku: string;
+  name: string;
+  shelf: string;
+  systemQty: number;
+  countedQty: number;
+  variance: number;
+  status: number;
+  statusName: string;
+}
 
 export default function InventoryCountPage() {
+  const { confirm } = useConfirm(); // Confirm kancası
+
+  const [warehouses, setWarehouses] = useState<WarehouseDto[]>([]);
+  const [zones, setZones] = useState<WarehouseZoneDto[]>([]);
+  const [shelves, setShelves] = useState<ShelfDto[]>([]);
+
+  const [activeCounts, setActiveCounts] = useState<ActiveCountItem[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    warehouseService.getAllAsync().then((warehousesData) => {
+      if (isMounted) {
+        setWarehouses(warehousesData);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleWarehouseChange = (warehouseId: string) => {
+    setZones([]);
+    setShelves([]);
+    if (warehouseId) {
+      warehouseZoneService
+        .getByWarehouseIdAsync(warehouseId)
+        .then((data) => setZones(data));
+    }
+  };
+
+  const handleZoneChange = (zoneId: string) => {
+    setShelves([]);
+    if (zoneId) {
+      shelfService.getByZoneIdAsync(zoneId).then((data) => setShelves(data));
+    }
+  };
+
+  const handleCountSubmit = async (formData: {
+    warehouseId: string;
+    shelfId: string;
+    productId: string;
+    quantity: number;
+  }) => {
+    // YENİ: Sayım onayı
+    const isConfirmed = await confirm({
+      title: "Sayım Sonucunu Kaydet",
+      description:
+        "Girdiğiniz fiziki sayım sonucu sisteme işlenecektir. Fark çıkması durumunda stoklar otomatik olarak eşitlenecek ve düzeltme fişi oluşturulacaktır. Onaylıyor musunuz?",
+      confirmText: "Evet, Kaydet",
+      cancelText: "Vazgeç",
+    });
+
+    if (!isConfirmed) return;
+
+    setIsSubmitting(true);
+
+    inventoryCountService
+      .performCountAsync({
+        warehouseId: formData.warehouseId,
+        shelfId: formData.shelfId,
+        productId: formData.productId,
+        countedQuantity: formData.quantity,
+      })
+      .then((result) => {
+        notifySuccess("Fiziksel sayım başarıyla kaydedildi.");
+
+        setActiveCounts((prev) => [
+          {
+            id: crypto.randomUUID(),
+            sku: result.sku,
+            name: result.productName,
+            shelf: result.shelfCode,
+            systemQty: result.systemQuantity,
+            countedQty: result.countedQuantity,
+            variance: result.variance,
+            status: result.status,
+            statusName: result.statusName,
+          },
+          ...prev,
+        ]);
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+      });
+  };
+
   return (
     <LayoutWrapper>
       <Box
@@ -55,21 +127,24 @@ export default function InventoryCountPage() {
           width: "100%",
           margin: "0 auto",
           boxSizing: "border-box",
+          pb: 8,
         }}
       >
-        {/* 1. Başlık Alanı */}
         <InventoryCountHeader />
 
-        {/* 2. Özet Kartları */}
-        <InventoryCountSummary />
-
         <Grid container spacing={{ xs: 3, md: 4 }}>
-          {/* 3. Sol Form */}
           <Grid size={{ xs: 12, lg: 5 }}>
-            <InventoryCountForm products={products} shelves={shelves} />
+            <InventoryCountForm
+              warehouses={warehouses}
+              zones={zones}
+              shelves={shelves}
+              onWarehouseChange={handleWarehouseChange}
+              onZoneChange={handleZoneChange}
+              onSubmit={handleCountSubmit}
+              isSubmitting={isSubmitting}
+            />
           </Grid>
 
-          {/* 4. Sağ Tablo */}
           <Grid size={{ xs: 12, lg: 7 }}>
             <InventoryCountTable activeCounts={activeCounts} />
           </Grid>

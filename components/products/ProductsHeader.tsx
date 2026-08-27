@@ -3,9 +3,12 @@ import AddIcon from "@mui/icons-material/Add";
 
 interface ProductsHeaderProps {
   onOpenModal: () => void;
+  isSuperAdmin?: boolean;
 }
 
-export default function ProductsHeader({ onOpenModal }: ProductsHeaderProps) {
+export default function ProductsHeader(
+  { onOpenModal, isSuperAdmin }: ProductsHeaderProps,
+) {
   return (
     <Box
       sx={{
@@ -36,7 +39,7 @@ export default function ProductsHeader({ onOpenModal }: ProductsHeaderProps) {
           Sistemde kayıtlı tüm ürünleri ve stok durumlarını yönetin
         </Typography>
       </Box>
-      <Button
+      {isSuperAdmin && (<Button
         variant="contained"
         startIcon={<AddIcon />}
         disableElevation
@@ -52,7 +55,8 @@ export default function ProductsHeader({ onOpenModal }: ProductsHeaderProps) {
         }}
       >
         Yeni Ürün
-      </Button>
+      </Button>)}
+      
     </Box>
   );
 }

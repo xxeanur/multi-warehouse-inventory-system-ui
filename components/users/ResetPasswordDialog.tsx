@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -7,28 +10,35 @@ import {
   TextField,
   Typography,
   Button,
+  Box,
 } from "@mui/material";
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  status: string;
-  lastLogin: string;
-}
+import { UserDto } from "@/types/identity/user";
 
 interface ResetPasswordDialogProps {
   open: boolean;
   onClose: () => void;
-  selectedUser: User | null;
+  selectedUser: UserDto | null;
+  onConfirm: (newPassword: string) => void;
 }
 
 export default function ResetPasswordDialog({
   open,
   onClose,
   selectedUser,
+  onConfirm,
 }: ResetPasswordDialogProps) {
+  const [newPassword, setNewPassword] = useState("");
+
+  useEffect(() => {
+    if (open) setNewPassword("");
+  }, [open]);
+
+  const handleSubmit = () => {
+    if (newPassword.trim().length >= 6) {
+      onConfirm(newPassword);
+    }
+  };
+
   return (
     <Dialog
       open={open}
@@ -36,7 +46,7 @@ export default function ResetPasswordDialog({
       slotProps={{ paper: { sx: { borderRadius: 3, p: 1, maxWidth: 400 } } }}
     >
       <DialogTitle sx={{ fontWeight: 800, color: "#111827", pb: 1 }}>
-        Şifreyi Sıfırla
+        Kullanıcı Şifresini Sıfırla
       </DialogTitle>
       <DialogContent>
         <DialogContentText
@@ -46,21 +56,46 @@ export default function ResetPasswordDialog({
             component="span"
             sx={{ fontWeight: 700, color: "#111827" }}
           >
-            {selectedUser?.name}
+            {selectedUser
+              ? `${selectedUser.firstName} ${selectedUser.lastName}`
+              : ""}
           </Typography>{" "}
-          adlı kullanıcının şifresini sıfırlamak üzeresiniz. Yeni geçici şifre
-          oluşturulacak.
+          adlı kullanıcının şifresini sıfırlamak üzeresiniz. Lütfen yeni bir
+          giriş şifresi belirleyin.
         </DialogContentText>
-        <TextField
-          fullWidth
-          disabled
-          label="Kullanıcı E-Posta"
-          defaultValue={selectedUser?.email}
-          sx={{
-            "& .MuiOutlinedInput-root": { borderRadius: 2, bgcolor: "#F3F4F6" },
-          }}
-        />
+
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <TextField
+            fullWidth
+            disabled
+            size="small"
+            label="Kullanıcı E-Posta"
+            value={selectedUser?.email || ""}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+                bgcolor: "#F3F4F6",
+              },
+            }}
+          />
+          <TextField
+            fullWidth
+            size="small"
+            type="password"
+            label="Yeni Geçici Şifre"
+            placeholder="En az 6 karakter girin..."
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+                bgcolor: "#F9FAFB",
+              },
+            }}
+          />
+        </Box>
       </DialogContent>
+
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button
           onClick={onClose}
@@ -70,7 +105,8 @@ export default function ResetPasswordDialog({
         </Button>
         <Button
           variant="contained"
-          onClick={onClose}
+          onClick={handleSubmit}
+          disabled={newPassword.trim().length < 6}
           sx={{
             bgcolor: "#059669",
             "&:hover": { bgcolor: "#047857" },
@@ -79,7 +115,7 @@ export default function ResetPasswordDialog({
             textTransform: "none",
           }}
         >
-          Geçici Şifre Oluştur
+          Şifreyi Güncelle
         </Button>
       </DialogActions>
     </Dialog>

@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Box,
   Card,
@@ -5,13 +7,27 @@ import {
   Typography,
   LinearProgress,
 } from "@mui/material";
+import { WarehouseOccupancyDto } from "@/types/common/dashboard";
 
-export default function DashboardCapacity() {
+interface DashboardCapacityProps {
+  occupancies: WarehouseOccupancyDto[];
+}
+
+export default function DashboardCapacity({
+  occupancies,
+}: DashboardCapacityProps) {
   const cardStyle = {
-    borderRadius: 3,
-    boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.02)",
-    border: "1px solid #E5E7EB",
+    borderRadius: 4,
+    boxShadow: "0px 4px 24px rgba(0, 0, 0, 0.04)",
+    border: "1px solid #F3F4F6",
     height: "100%",
+  };
+
+  const getProgressColor = (rate: number) => {
+    if (rate >= 90)
+      return { bg: "rgba(255, 56, 92, 0.15)", bar: "#FF385C", text: "#FF385C" };
+    if (rate >= 70) return { bg: "#FEF3C7", bar: "#F59E0B", text: "#F59E0B" };
+    return { bg: "#D1FAE5", bar: "#059669", text: "#059669" };
   };
 
   return (
@@ -19,7 +35,7 @@ export default function DashboardCapacity() {
       elevation={0}
       sx={{ ...cardStyle, display: "flex", flexDirection: "column" }}
     >
-      <Box sx={{ px: 3, py: 2.5, borderBottom: "1px solid #E5E7EB" }}>
+      <Box sx={{ px: 3, py: 2.5, borderBottom: "1px solid #F3F4F6" }}>
         <Typography
           variant="subtitle1"
           sx={{ fontWeight: 600, color: "#111827" }}
@@ -36,98 +52,55 @@ export default function DashboardCapacity() {
           justifyContent: "center",
         }}
       >
-        {/* Ankara */}
-        <Box>
-          <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
-            <Typography
-              variant="body2"
-              sx={{ fontWeight: 600, color: "#374151" }}
-            >
-              Ankara İç Anadolu Hub
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{ fontWeight: 700, color: "#DC2626" }}
-            >
-              %94
-            </Typography>
-          </Box>
-          <LinearProgress
-            variant="determinate"
-            value={94}
-            sx={{
-              height: 8,
-              borderRadius: 4,
-              bgcolor: "#FEE2E2",
-              "& .MuiLinearProgress-bar": {
-                bgcolor: "#DC2626",
-                borderRadius: 4,
-              },
-            }}
-          />
-        </Box>
-
-        {/* Konya */}
-        <Box>
-          <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
-            <Typography
-              variant="body2"
-              sx={{ fontWeight: 600, color: "#374151" }}
-            >
-              Konya Merkez Depo
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{ fontWeight: 700, color: "#F59E0B" }}
-            >
-              %80
-            </Typography>
-          </Box>
-          <LinearProgress
-            variant="determinate"
-            value={80}
-            sx={{
-              height: 8,
-              borderRadius: 4,
-              bgcolor: "#FEF3C7",
-              "& .MuiLinearProgress-bar": {
-                bgcolor: "#F59E0B",
-                borderRadius: 4,
-              },
-            }}
-          />
-        </Box>
-
-        {/* İstanbul */}
-        <Box>
-          <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
-            <Typography
-              variant="body2"
-              sx={{ fontWeight: 600, color: "#374151" }}
-            >
-              İstanbul Avrupa Transfer
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{ fontWeight: 700, color: "#059669" }}
-            >
-              %60
-            </Typography>
-          </Box>
-          <LinearProgress
-            variant="determinate"
-            value={60}
-            sx={{
-              height: 8,
-              borderRadius: 4,
-              bgcolor: "#D1FAE5",
-              "& .MuiLinearProgress-bar": {
-                bgcolor: "#059669",
-                borderRadius: 4,
-              },
-            }}
-          />
-        </Box>
+        {occupancies.length === 0 ? (
+          <Typography
+            variant="body2"
+            sx={{ color: "#6B7280", textAlign: "center" }}
+          >
+            Veri bulunamadı.
+          </Typography>
+        ) : (
+          occupancies.map((wh) => {
+            const colors = getProgressColor(wh.occupancyRate);
+            return (
+              <Box key={wh.warehouseName}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    mb: 1,
+                  }}
+                >
+                  <Typography
+                    variant="body2"
+                    sx={{ fontWeight: 600, color: "#374151" }}
+                  >
+                    {wh.warehouseName}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{ fontWeight: 700, color: colors.text }}
+                  >
+                    %{wh.occupancyRate}
+                  </Typography>
+                </Box>
+                <LinearProgress
+                  variant="determinate"
+                  value={wh.occupancyRate}
+                  sx={{
+                    height: 8,
+                    borderRadius: 4,
+                    bgcolor: colors.bg,
+                    "& .MuiLinearProgress-bar": {
+                      bgcolor: colors.bar,
+                      borderRadius: 4,
+                    },
+                  }}
+                />
+              </Box>
+            );
+          })
+        )}
       </CardContent>
     </Card>
   );

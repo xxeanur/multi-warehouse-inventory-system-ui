@@ -20,14 +20,12 @@ export default function LayoutWrapper({
 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#F9FAFB" }}>
-      {/* Sol Menü */}
       <Sidebar
         mobileOpen={mobileOpen}
         onClose={handleDrawerToggle}
         drawerWidth={DRAWER_WIDTH}
       />
 
-      {/* Sağ Taraf (Üst Bar ve İçerik) */}
       <Box
         sx={{
           flexGrow: 1,
@@ -42,7 +40,6 @@ export default function LayoutWrapper({
       >
         <Navbar onMenuClick={handleDrawerToggle} />
 
-        {/* Ortadaki Değişen Sayfa İçeriği */}
         <Box
           component="main"
           sx={{

@@ -1,8 +1,9 @@
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
 import "./globals.css";
 import { Roboto } from 'next/font/google';
-import { Montserrat } from 'next/font/google';
- 
+import { NotificationProvider } from "@/contexts/NotificationContext";
+import { ConfirmProvider } from "@/contexts/ConfirmContext"; // YENİ EKLENDİ
+
 // Roboto fontunu Next.js üzerinden optimize ederek çağırıyoruz
 const roboto = Roboto({
   weight: ['300', '400', '500', '700'],
@@ -30,7 +31,11 @@ export default function RootLayout({
         fontFamily: 'var(--font-roboto), sans-serif' // Tüm uygulamada Roboto kullanımı
       }}>
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
-          {children}
+          <NotificationProvider>
+            <ConfirmProvider> {/* SİSTEME DAHİL EDİLDİ */}
+              {children}
+            </ConfirmProvider>
+          </NotificationProvider>
         </AppRouterCacheProvider>
       </body>
     </html>

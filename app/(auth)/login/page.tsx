@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
+import { authService } from "@/services/identity/authService";
+import { useNotification } from "@/contexts/NotificationContext";
 import {
   Box,
   Button,
@@ -14,26 +17,64 @@ import {
   Checkbox,
   FormControlLabel,
   Link,
+  CircularProgress,
 } from "@mui/material";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
+import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import LayersIcon from "@mui/icons-material/Layers";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { showNotification } = useNotification();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const primaryColor = "#172C4A";
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    router.push("/dashboard");
+    if (!email || !password) {
+      showNotification("Lütfen e-posta ve şifrenizi giriniz.", "warning");
+      return;
+    }
+    setIsLoading(true);
+
+    try {
+      const tokenData = await authService.login({ email, password });
+
+      const accessCookieOptions: Cookies.CookieAttributes = { secure: true };
+      const refreshCookieOptions: Cookies.CookieAttributes = { secure: true };
+
+      if (rememberMe) {
+        accessCookieOptions.expires = new Date(tokenData.accessTokenExpiration);
+        refreshCookieOptions.expires = new Date(
+          tokenData.refreshTokenExpiration,
+        );
+      }
+      Cookies.set("accessToken", tokenData.accessToken, accessCookieOptions);
+      Cookies.set("refreshToken", tokenData.refreshToken, refreshCookieOptions);
+
+      showNotification("Giriş başarılı, yönlendiriliyorsunuz...", "success");
+
+      const userRole = tokenData.user?.role;
+
+      if (userRole === "Staff") {
+        router.push("/products");
+      } else {
+        router.push("/dashboard");
+      }
+    } catch (error) {
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const inputStyles = {
@@ -60,30 +101,25 @@ export default function LoginPage() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        bgcolor: { xs: "#FFFFFF", sm: "#F3F4F6" }, // Mobilde arka planı da beyaz yapıyoruz
+        bgcolor: { xs: "#FFFFFF", sm: "#F3F4F6" },
       }}
     >
       <Card
         elevation={0}
         sx={{
-          // Mobilde %100 genişlik ve yükseklik, masaüstünde sabit genişlik
           maxWidth: { xs: "100%", sm: 420 },
           width: "100%",
           minHeight: { xs: "100vh", sm: "auto" },
-          // Mobilde köşeleri sıfırla, masaüstünde yuvarlat
           borderRadius: { xs: 0, sm: 4 },
-          // Mobilde gölgeyi ve kenarlığı kaldır
           boxShadow: { xs: "none", sm: "0px 10px 30px rgba(0, 0, 0, 0.05)" },
           border: { xs: "none", sm: "1px solid rgba(255, 255, 255, 0.8)" },
           bgcolor: "#FFFFFF",
-          // Mobilde içeriği dikeyde tam ortalamak için flex yapısı
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
         }}
       >
         <CardContent sx={{ p: { xs: 3, sm: 4, md: 5 } }}>
-          {/* Logo ve Başlık Alanı */}
           <Box
             sx={{
               display: "flex",
@@ -93,12 +129,7 @@ export default function LoginPage() {
             }}
           >
             <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1.5,
-                mb: 2,
-              }}
+              sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}
             >
               <LayersIcon sx={{ fontSize: 40, color: primaryColor }} />
               <Typography
@@ -120,9 +151,11 @@ export default function LoginPage() {
             </Typography>
           </Box>
 
-          {/* Form Alanı */}
           <form onSubmit={handleLogin}>
-            <Typography variant="body2" sx={{ color: "#374151", mb: 1, fontWeight: 500 }}>
+            <Typography
+              variant="body2"
+              sx={{ color: "#374151", mb: 1, fontWeight: 500 }}
+            >
               E-posta
             </Typography>
             <TextField
@@ -131,19 +164,26 @@ export default function LoginPage() {
               placeholder="ornek@entegreyazilim.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={isLoading}
               sx={{ mb: 3, ...inputStyles }}
               slotProps={{
                 input: {
                   startAdornment: (
                     <InputAdornment position="start">
-                      <PersonOutlineOutlinedIcon fontSize="small" sx={{ color: "#9CA3AF" }} />
+                      <PersonOutlineOutlinedIcon
+                        fontSize="small"
+                        sx={{ color: "#9CA3AF" }}
+                      />
                     </InputAdornment>
                   ),
                 },
               }}
             />
 
-            <Typography variant="body2" sx={{ color: "#374151", mb: 1, fontWeight: 500 }}>
+            <Typography
+              variant="body2"
+              sx={{ color: "#374151", mb: 1, fontWeight: 500 }}
+            >
               Şifre
             </Typography>
             <TextField
@@ -153,12 +193,16 @@ export default function LoginPage() {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
               sx={{ mb: 1, ...inputStyles }}
               slotProps={{
                 input: {
                   startAdornment: (
                     <InputAdornment position="start">
-                      <LockOutlinedIcon fontSize="small" sx={{ color: "#9CA3AF" }} />
+                      <LockOutlinedIcon
+                        fontSize="small"
+                        sx={{ color: "#9CA3AF" }}
+                      />
                     </InputAdornment>
                   ),
                   endAdornment: (
@@ -167,11 +211,18 @@ export default function LoginPage() {
                         onClick={() => setShowPassword(!showPassword)}
                         edge="end"
                         size="small"
+                        disabled={isLoading}
                       >
                         {showPassword ? (
-                          <VisibilityOff fontSize="small" sx={{ color: "#9CA3AF" }} />
+                          <VisibilityOff
+                            fontSize="small"
+                            sx={{ color: "#9CA3AF" }}
+                          />
                         ) : (
-                          <Visibility fontSize="small" sx={{ color: "#9CA3AF" }} />
+                          <Visibility
+                            fontSize="small"
+                            sx={{ color: "#9CA3AF" }}
+                          />
                         )}
                       </IconButton>
                     </InputAdornment>
@@ -180,7 +231,6 @@ export default function LoginPage() {
               }}
             />
 
-            {/* Beni Hatırla ve Şifremi Unuttum */}
             <Box
               sx={{
                 display: "flex",
@@ -195,11 +245,10 @@ export default function LoginPage() {
                     size="small"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
+                    disabled={isLoading}
                     sx={{
                       color: "#D1D5DB",
-                      "&.Mui-checked": {
-                        color: primaryColor,
-                      },
+                      "&.Mui-checked": { color: primaryColor },
                     }}
                   />
                 }
@@ -211,13 +260,19 @@ export default function LoginPage() {
               />
             </Box>
 
-            {/* Giriş Butonu */}
             <Button
               type="submit"
               fullWidth
               variant="contained"
               disableElevation
-              endIcon={<ArrowForwardIcon />}
+              disabled={isLoading}
+              endIcon={
+                isLoading ? (
+                  <CircularProgress size={20} color="inherit" />
+                ) : (
+                  <ArrowForwardIcon />
+                )
+              }
               sx={{
                 py: 1.5,
                 bgcolor: primaryColor,
@@ -225,15 +280,13 @@ export default function LoginPage() {
                 fontWeight: 600,
                 fontSize: "1rem",
                 borderRadius: 2,
-                "&:hover": {
-                  bgcolor: "#0F1D33",
-                },
+                "&:hover": { bgcolor: "#0F1D33" },
+                "&.Mui-disabled": { bgcolor: "#9CA3AF", color: "#FFFFFF" },
               }}
             >
-              Giriş Yap
+              {isLoading ? "Giriş Yapılıyor..." : "Giriş Yap"}
             </Button>
-            
-            {/* Alt Linkler */}
+
             <Box
               sx={{
                 display: "flex",
@@ -255,12 +308,9 @@ export default function LoginPage() {
                 Şifremi Unuttum?
               </Link>
               <Link
-               href="/support"
+                href="/support"
                 underline="hover"
-                sx={{
-                  color: "#6B7280",
-                  fontSize: "0.875rem",
-                }}
+                sx={{ color: "#6B7280", fontSize: "0.875rem" }}
               >
                 Yardım Masası
               </Link>
